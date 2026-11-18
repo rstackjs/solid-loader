@@ -4,7 +4,9 @@
     "target": "ES2020",
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["rstack/types"],
+    "types": ["node"],
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web",
     "useDefineForClassFields": true,
 
     /* modules */
@@ -18,5 +20,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src"]
+  "include": ["src", "rspack.config.ts"]
 }

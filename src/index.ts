@@ -1,16 +1,92 @@
-import type { RsbuildPlugin } from '@rsbuild/core';
+import { createRequire } from 'node:module';
+import type { TransformOptions } from '@babel/core';
+import type { LoaderDefinition } from '@rspack/core';
+import type { TransformOptions as NativeTransformOptions } from '@solidjs/compiler';
+import {
+  getTransformFilename,
+  mergeSourceMaps,
+  normalizeSourceMap,
+} from './helpers.js';
+import type { SolidCompiler, SolidPresetOptions } from './types.js';
 
-export type PluginExampleOptions = {
-  foo?: string;
-  bar?: boolean;
+export type { SolidCompiler, SolidPresetOptions } from './types.js';
+
+const require = createRequire(import.meta.url);
+const TSX_REGEX = /\.tsx$/i;
+
+export type SolidLoaderOptions = {
+  compiler?: SolidCompiler;
+  solid?: SolidPresetOptions;
+  scriptRegex?: RegExp;
+  decoratorVersion?: 'legacy' | '2022-03' | '2023-11';
+  transformFilename?: string;
 };
 
-export const pluginExample = (
-  options: PluginExampleOptions = {},
-): RsbuildPlugin => ({
-  name: 'plugin-example',
+const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
+  source,
+  sourceMap,
+): Promise<void> {
+  const callback = this.async();
+  const options = this.getOptions();
+  const sourceFilename = this.resourcePath;
+  const resourceFilename = options.transformFilename ?? sourceFilename;
 
-  setup() {
-    console.log('Hello Rsbuild!', options);
-  },
-});
+  if (options.scriptRegex && !options.scriptRegex.test(resourceFilename)) {
+    callback(null, source, sourceMap);
+    return;
+  }
+
+  const filename = getTransformFilename(resourceFilename);
+  const { compiler = 'native', decoratorVersion } = options;
+  const solid = { dev: this.mode === 'development', ...options.solid };
+  const inputSourceMap = normalizeSourceMap(sourceMap);
+
+  try {
+    if (compiler === 'babel') {
+      const { transformAsync } = await import('@babel/core');
+      const parserPlugins: NonNullable<
+        NonNullable<TransformOptions['parserOpts']>['plugins']
+      > = [decoratorVersion === 'legacy' ? 'decorators-legacy' : 'decorators'];
+
+      parserPlugins.push('jsx');
+
+      if (TSX_REGEX.test(filename)) {
+        parserPlugins.push('typescript');
+      }
+
+      const result = await transformAsync(source, {
+        filename,
+        sourceFileName: sourceFilename,
+        sourceMaps: this.sourceMap || Boolean(sourceMap),
+        inputSourceMap,
+        ast: false,
+        babelrc: false,
+        configFile: false,
+        parserOpts: {
+          plugins: parserPlugins,
+        },
+        plugins: [[require.resolve('@solidjs/babel-plugin'), solid]],
+      });
+
+      callback(null, result?.code ?? source, result?.map ?? inputSourceMap);
+      return;
+    }
+
+    const { transformAsync } = await import('@solidjs/compiler');
+    const result = await transformAsync(source, {
+      ...solid,
+      filename,
+      sourceMap: this.sourceMap || Boolean(sourceMap),
+    } as NativeTransformOptions);
+
+    callback(
+      null,
+      result.code,
+      mergeSourceMaps(inputSourceMap, result.map, sourceFilename),
+    );
+  } catch (error) {
+    callback(error instanceof Error ? error : new Error(String(error)));
+  }
+};
+
+export default solidLoader;

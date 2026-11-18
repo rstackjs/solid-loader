@@ -1,13 +1,18 @@
 {
-  "name": "rsbuild-plugin-example",
+  "name": "solid-loader",
   "version": "0.0.0",
-  "repository": "https://github.com/rstackjs/rsbuild-plugin-template",
+  "description": "Solid JSX and refresh loaders for Rspack",
+  "repository": "https://github.com/rstackjs/solid-loader",
   "license": "MIT",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./refresh": {
+      "types": "./dist/refresh.d.ts",
+      "default": "./dist/refresh.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -24,22 +29,29 @@
     "prepare": "rs hooks",
     "test": "rs test"
   },
+  "dependencies": {
+    "@babel/core": "^7.29.13",
+    "@jridgewell/remapping": "^2.3.5",
+    "@solidjs/babel-plugin": "2.0.0",
+    "@solidjs/compiler": "2.0.0"
+  },
   "devDependencies": {
-    "@rsbuild/core": "^2.3.2",
+    "@rspack/core": "catalog:",
+    "@rspack/dev-server": "catalog:",
     "@rstackjs/test-utils": "^1.0.0",
     "@rstest/playwright": "^0.12.6",
+    "@solidjs/web": "catalog:",
+    "@types/babel__core": "^7.20.5",
     "@types/node": "^24.19.2",
     "playwright": "^1.65.0",
     "rstack": "^0.9.1",
+    "solid-js": "catalog:",
     "typescript": "^7.0.2"
   },
   "peerDependencies": {
-    "@rsbuild/core": "^2.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@rsbuild/core": {
-      "optional": true
-    }
+    "@rspack/core": "^2.0.0",
+    "@solidjs/web": "^2.0.0",
+    "solid-js": "^2.0.0"
   },
   "packageManager": "pnpm@12.18.0",
   "publishConfig": {
