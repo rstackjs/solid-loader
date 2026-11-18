@@ -75,7 +75,11 @@ for (const compiler of ['native', 'babel']) {
   });
 }
 
-for (const mode of ['inline native', 'inline Babel', 'pre-loader']) {
+for (const mode of [
+  'automatic refresh',
+  'explicit Babel refresh',
+  'pre-loader',
+]) {
   test(`preserves parent state during HMR with ${mode}`, async ({ page }) => {
     const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
     try {
@@ -85,7 +89,7 @@ for (const mode of ['inline native', 'inline Babel', 'pre-loader']) {
       const port = await getRandomPort();
       const config = playgroundConfig({}, { mode: 'development' });
       config.context = cwd;
-      if (mode !== 'inline native') {
+      if (mode !== 'automatic refresh') {
         const rules = config.module!.rules!;
         const jsxRule = rules[0] as RuleSetRule;
         const standalone = mode === 'pre-loader';

@@ -20,7 +20,7 @@ export default (
           test: /\.[mc]?[jt]sx$/i,
           use: [
             { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
-            { loader: 'solid-loader', options: { refresh: dev } },
+            'solid-loader',
           ],
         },
         {

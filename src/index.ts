@@ -41,8 +41,15 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
   const filename = getTransformFilename(resourceFilename);
   const { compiler = 'native', decoratorVersion } = options;
   const solid = { dev: this.mode === 'development', ...options.solid };
+  const refresh =
+    options.refresh ??
+    (this.mode === 'development' &&
+      this.hot &&
+      this.environment.document &&
+      solid.generate !== 'ssr');
+
   try {
-    if (options.refresh) {
+    if (refresh) {
       const result = await applyRefresh(source, sourceMap, this, {
         filename: resourceFilename,
       });

@@ -48,23 +48,11 @@ For TypeScript projects, set `jsx` to `"preserve"` and `jsxImportSource` to `"@s
 
 ## Solid Refresh
 
-For browser development builds, enable HMR in Rspack, add `'development'` to `resolve.conditionNames` alongside `'solid'`, and set `refresh: true` on the main loader.
-
-```ts
-const jsxRule = {
-  test: /\.[mc]?[jt]sx$/i,
-  use: [
-    { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
-    { loader: 'solid-loader', options: { refresh: true } },
-  ],
-};
-```
-
-The [playground](./playground/rspack.config.ts) enables this option only in development.
+Solid Refresh runs automatically for browser development builds when Rspack enables HMR. Keep `'solid'` and `'development'` in your development resolve conditions so Solid uses its development runtime. See the [playground configuration](./playground/rspack.config.ts) for a complete example.
 
 ### Using a separate pre-loader
 
-If another loader needs to run between Solid Refresh and JSX compilation, use `solid-loader/refresh` as a pre-loader and leave the main loader’s `refresh` option at its default. For example, this lets Refresh register components before a custom Babel transform runs.
+If another loader needs to run between Solid Refresh and JSX compilation, use `solid-loader/refresh` as a pre-loader and set `refresh: false` on the main loader. Integrations such as Rsbuild can then register components before a custom Babel transform runs.
 
 ```js
 {
@@ -122,9 +110,9 @@ Selects the Solid JSX compiler. The default uses `@solidjs/compiler`. Set this t
 ### refresh
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** Enabled in development mode when HMR is active, the target supports the DOM, and `solid.generate` is not `'ssr'`.
 
-Runs Solid Refresh before the main loader compiles JSX with either compiler. Enable it for browser builds that use HMR. Files in `node_modules` skip the Refresh transform and still go through JSX compilation.
+Runs Solid Refresh before JSX compilation with either compiler. Set `false` to disable the built-in transform or `true` to enable it explicitly. Files in `node_modules` skip the Refresh transform and still go through JSX compilation.
 
 ### solid
 
