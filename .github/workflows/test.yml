@@ -40,5 +40,8 @@ jobs:
       - name: Install Playwright
         run: pnpm exec playwright install chromium
 
+      - name: Build loaders
+        run: node --run build
+
       - name: Run Test
         run: node --run test

@@ -17,3 +17,9 @@ minimumReleaseAgeExclude:
   - 'rsbuild-plugin-*'
   - rstack
   - typescript
+
+catalog:
+  '@rspack/core': '~2.3.3'
+  '@rspack/dev-server': '^2.2.2'
+  '@solidjs/web': '^2.0.0'
+  solid-js: '^2.0.0'

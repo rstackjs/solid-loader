@@ -2,6 +2,9 @@
 import { define } from 'rstack';
 
 define.lib({
+  source: {
+    entry: { index: './src/index.ts', refresh: './src/refresh.ts' },
+  },
   dts: true,
   syntax: 'es2023',
 });

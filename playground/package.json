@@ -4,7 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rs build",
-    "dev": "rs dev"
+    "build": "rspack build",
+    "dev": "rspack serve --mode development"
+  },
+  "dependencies": {
+    "@solidjs/web": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@rspack/cli": "~2.3.3",
+    "@rspack/core": "catalog:",
+    "@rspack/dev-server": "catalog:",
+    "solid-loader": "workspace:*"
   }
 }

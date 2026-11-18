@@ -4,7 +4,8 @@
     "target": "ES2020",
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["rstack/types"],
+    "jsx": "preserve",
+    "jsxImportSource": "@solidjs/web",
     "useDefineForClassFields": true,
 
     /* modules */
