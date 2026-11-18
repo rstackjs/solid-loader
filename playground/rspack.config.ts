@@ -5,7 +5,6 @@ export default (
   { mode }: Pick<Configuration, 'mode'>,
 ): Configuration => {
   const dev = mode === 'development';
-  const test = /\.[mc]?[jt]sx$/i;
 
   return {
     context: import.meta.dirname,
@@ -18,20 +17,11 @@ export default (
     module: {
       rules: [
         {
-          test,
+          test: /\.[mc]?[jt]sx$/i,
           use: [
             { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
-            'solid-loader',
+            { loader: 'solid-loader', options: { refresh: dev } },
           ],
-        },
-        dev && {
-          test,
-          enforce: 'pre',
-          exclude: /node_modules/,
-          dependency: { not: 'url' },
-          resourceQuery: { not: /[?&]raw(?:&|=|$)/ },
-          with: { type: { not: 'text' } },
-          loader: 'solid-loader/refresh',
         },
         {
           descriptionData: { name: /^@solidjs\/web$/ },
