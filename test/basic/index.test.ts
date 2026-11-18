@@ -5,7 +5,7 @@ import { rspack } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { expect, test } from '@rstest/playwright';
 import { getRandomPort } from '@rstackjs/test-utils';
-import playgroundConfig from '../../playground/rspack.config.mjs';
+import playgroundConfig from '../../playground/rspack.config.ts';
 
 const playground = path.resolve(import.meta.dirname, '../../playground');
 

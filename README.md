@@ -13,9 +13,11 @@ pnpm add -D solid-loader
 
 Add the loader to the JSX rule in your Rspack config:
 
-```js
-// rspack.config.mjs
-export default {
+```ts
+// rspack.config.ts
+import { defineConfig } from '@rspack/cli';
+
+export default defineConfig({
   resolve: {
     extensions: ['.tsx', '.jsx', '.ts', '...'],
     conditionNames: ['solid', '...'],
@@ -31,7 +33,7 @@ export default {
       },
     ],
   },
-};
+});
 ```
 
 Rspack runs the loaders from right to left. Solid compiles JSX first, then SWC removes TypeScript types and lowers JavaScript syntax. If you already have an SWC rule for TSX, add `solid-loader` to that rule. For TypeScript projects, set `jsx` to `"preserve"` and `jsxImportSource` to `"@solidjs/web"` in `tsconfig.json`.
@@ -52,7 +54,7 @@ For browser development builds with HMR enabled, add `development` to the resolv
 }
 ```
 
-Refresh generates per-component metadata by default. Set `options: { granular: false }` on the refresh rule to disable it. The [playground](./playground/rspack.config.mjs) shows the full configuration for development and production.
+Refresh generates per-component metadata by default. Set `options: { granular: false }` on the refresh rule to disable it. The [playground](./playground/rspack.config.ts) shows the full configuration for development and production.
 
 ## Server-side rendering
 

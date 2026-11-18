@@ -1,6 +1,9 @@
-import { HtmlRspackPlugin } from '@rspack/core';
+import { type Configuration, HtmlRspackPlugin } from '@rspack/core';
 
-export default (_env, { mode }) => {
+export default (
+  _env: unknown,
+  { mode }: Pick<Configuration, 'mode'>,
+): Configuration => {
   const dev = mode === 'development';
   const test = /\.[mc]?[jt]sx$/i;
 
@@ -21,19 +24,15 @@ export default (_env, { mode }) => {
             'solid-loader',
           ],
         },
-        ...(dev
-          ? [
-              {
-                test,
-                enforce: 'pre',
-                exclude: /node_modules/,
-                dependency: { not: 'url' },
-                resourceQuery: { not: /[?&]raw(?:&|=|$)/ },
-                with: { type: { not: 'text' } },
-                loader: 'solid-loader/refresh',
-              },
-            ]
-          : []),
+        dev && {
+          test,
+          enforce: 'pre',
+          exclude: /node_modules/,
+          dependency: { not: 'url' },
+          resourceQuery: { not: /[?&]raw(?:&|=|$)/ },
+          with: { type: { not: 'text' } },
+          loader: 'solid-loader/refresh',
+        },
         {
           descriptionData: { name: /^@solidjs\/web$/ },
           parser: { importDynamic: false },
