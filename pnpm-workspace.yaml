@@ -1,0 +1,19 @@
+packages:
+  - playground
+
+allowBuilds:
+  core-js: false
+  simple-git-hooks: false
+
+minimumReleaseAgeExclude:
+  - '@rsbuild/*'
+  - '@rslib/*'
+  - '@rslint/*'
+  - '@rspack/*'
+  - '@rspress/*'
+  - '@rstackjs/*'
+  - '@rstest/*'
+  - '@typescript/*'
+  - 'rsbuild-plugin-*'
+  - rstack
+  - typescript
