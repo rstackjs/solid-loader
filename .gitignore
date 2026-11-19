@@ -13,4 +13,4 @@ test-results
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea
-playground/test-temp-*/
+test-temp-*/
