@@ -1,7 +1,6 @@
 import { createRequire } from 'node:module';
 import type { TransformOptions } from '@babel/core';
 import type { LoaderDefinition } from '@rspack/core';
-import type { TransformOptions as NativeTransformOptions } from '@solidjs/compiler';
 import {
   applyRefresh,
   getTransformFilename,
@@ -93,7 +92,7 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
       ...solid,
       filename,
       sourceMap: this.sourceMap || Boolean(sourceMap),
-    } as NativeTransformOptions);
+    });
 
     callback(
       null,
