@@ -76,7 +76,10 @@ Set loader options in `module.rules` in your `rspack.config.ts`. The main loader
 
 ### compiler
 
-The loader uses Solid’s native compiler by default (`'native'`). Set `compiler` to `'babel'` to compile JSX with `@solidjs/babel-plugin`.
+- **Type:** `'native' | 'babel'`
+- **Default:** `'native'`
+
+Choose the Solid JSX compiler. Set `compiler` to `'babel'` to use `@solidjs/babel-plugin`.
 
 ```ts
 export default {
@@ -96,7 +99,10 @@ export default {
 
 ### refresh
 
-By default, Solid Refresh runs in development when HMR is enabled, the target supports the DOM, and the compiler is generating client output. Set `refresh` to `true` or `false` to override that behavior. For example, disable it on the main loader when using the [separate pre-loader](#using-a-separate-pre-loader).
+- **Type:** `boolean`
+- **Default:** `true` for client builds in development mode when HMR is enabled and the target supports the DOM, otherwise `false`
+
+Set `refresh` to enable or disable Solid Refresh on the main loader. Set it to `false` when using the [separate pre-loader](#using-a-separate-pre-loader).
 
 ```ts
 export default {
@@ -116,7 +122,9 @@ export default {
 
 ### solid
 
-Pass options to the selected Solid compiler through `solid`. It generates DOM output by default and enables development transforms in Rspack’s development mode. Source locations are relative to Rspack’s `context` by default. Set `solid.root` to use a different base directory.
+- **Type:** `SolidPresetOptions`
+
+Pass options to the selected Solid compiler. By default, it generates DOM output, enables development transforms in Rspack’s development mode, and reports source locations relative to Rspack’s `context`. Set `solid.root` to use a different base directory.
 
 For a server build that renders HTML for hydration, use the following settings.
 
@@ -149,6 +157,8 @@ export default {
 ```
 
 ### decoratorVersion
+
+- **Type:** `'legacy' | '2022-03' | '2023-11'`
 
 The Babel backend parses standard decorators by default. Both `'2022-03'` and `'2023-11'` use that parser. Choose `'legacy'` if your code uses legacy decorator syntax.
 
@@ -189,7 +199,9 @@ export default {
 
 ### scriptRegex
 
-By default, the loader processes every file matched by the Rspack rule. If the rule also handles plain TypeScript, use `scriptRegex` to compile only TSX files and pass the rest through to the next loader.
+- **Type:** `RegExp`
+
+Filter the files passed to the loader by filename. Without a filter, the loader processes every file matched by the Rspack rule. For example, a rule that handles TypeScript can restrict Solid compilation to TSX files.
 
 ```ts
 export default {
@@ -219,7 +231,10 @@ export default {
 
 ### transformFilename
 
-The loader normally uses the resource path to match `scriptRegex` and choose a parser. Give an inline module a filename such as `'data-uri.jsx'` to parse it as JSX. Source maps still point to the original resource.
+- **Type:** `string`
+- **Default:** `this.resourcePath`
+
+Set the filename used to match `scriptRegex` and choose a parser. For example, give an inline module the filename `'data-uri.jsx'` to parse it as JSX. Source maps still point to the original resource.
 
 ```ts
 export default {
@@ -240,7 +255,10 @@ export default {
 
 ### granular
 
-The `solid-loader/refresh` pre-loader tracks changes per component by default so edits can preserve state in unaffected components. Set `granular` to `false` on the pre-loader to turn off this tracking while keeping HMR enabled.
+- **Type:** `boolean`
+- **Default:** `true`
+
+The `solid-loader/refresh` pre-loader tracks changes per component so edits can preserve state in unaffected components. Set `granular` to `false` to turn off this tracking while keeping HMR enabled.
 
 ```ts
 export default {
