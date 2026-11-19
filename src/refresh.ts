@@ -1,13 +1,18 @@
 import type { LoaderDefinition } from '@rspack/core';
-import { applyRefresh } from './helpers.js';
+import { applyRefresh, NODE_MODULES_REGEX } from './helpers.js';
 
 export type SolidRefreshLoaderOptions = {
   granular?: boolean;
 };
 
 const solidRefreshLoader: LoaderDefinition<SolidRefreshLoaderOptions> =
-  async function (source, sourceMap): Promise<void> {
+  async function (source, sourceMap, additionalData): Promise<void> {
     const callback = this.async();
+
+    if (NODE_MODULES_REGEX.test(this.resourcePath)) {
+      callback(null, source, sourceMap, additionalData);
+      return;
+    }
 
     try {
       const { granular } = this.getOptions();
