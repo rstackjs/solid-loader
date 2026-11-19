@@ -1,6 +1,8 @@
 # solid-loader
 
-A Rspack 2 loader for Solid 2 JSX and TSX. It uses Solid’s native compiler by default and supports hot module replacement (HMR) with Solid Refresh.
+A Rspack loader for Solid JSX and TSX, with built-in support for Solid Refresh.
+
+Requires Solid 2.0.0 or later and Rspack 2.0.0 or later.
 
 <p>
   <a href="https://www.npmjs.com/package/solid-loader"><img src="https://img.shields.io/npm/v/solid-loader?style=flat-square&colorA=564341&colorB=EDED91" alt="npm version" /></a>
@@ -10,14 +12,19 @@ A Rspack 2 loader for Solid 2 JSX and TSX. It uses Solid’s native compiler by 
 
 ## Usage
 
-Install the Solid runtime and add the loader as a development dependency.
+Install the loader as a development dependency with your preferred package manager.
 
 ```sh
-pnpm add solid-js@2 @solidjs/web@2
+npm install -D solid-loader
+# or
 pnpm add -D solid-loader
+# or
+yarn add -D solid-loader
+# or
+bun add --dev solid-loader
 ```
 
-Add `solid-loader` to the JSX and TSX rule in `rspack.config.ts`. If your project already has an SWC rule for these files, add the loader to its `use` array as shown below.
+Add `solid-loader` after `builtin:swc-loader` in the `use` array for JSX and TSX files. Rspack runs loaders from right to left, so Solid compiles the JSX first and SWC then strips TypeScript types.
 
 ```ts
 // rspack.config.ts
@@ -42,110 +49,99 @@ export default defineConfig({
 });
 ```
 
-Rspack runs loaders from right to left. In this rule, Solid compiles the JSX first. SWC then strips TypeScript types and transforms the remaining JavaScript for your target.
-
-For TypeScript projects, set `jsx` to `"preserve"` and `jsxImportSource` to `"@solidjs/web"` in `tsconfig.json`.
+In TypeScript projects, set `jsx` to `"preserve"` and `jsxImportSource` to `"@solidjs/web"` in `tsconfig.json`.
 
 ## Solid Refresh
 
-Solid Refresh runs automatically for browser development builds when Rspack enables HMR. Keep `'solid'` and `'development'` in your development resolve conditions so Solid uses its development runtime. See the [playground configuration](./playground/rspack.config.ts) for a complete example.
+Solid Refresh runs automatically during browser development when hot module replacement (HMR) is enabled. Include `'development'` alongside `'solid'` in your development resolve conditions to load Solid’s development runtime. The [playground configuration](./playground/rspack.config.ts) shows how to do this.
 
 ### Using a separate pre-loader
 
-If another loader needs to run between Solid Refresh and JSX compilation, use `solid-loader/refresh` as a pre-loader and set `refresh: false` on the main loader. Integrations such as Rsbuild can then register components before a custom Babel transform runs.
+If a Babel transform needs to run between Solid Refresh and JSX compilation, set `refresh: false` on the main loader and add this rule to your browser development config. Rspack will run it before the other loaders.
 
-```js
-{
+```ts
+const refreshRule = {
   test: /\.[mc]?[jt]sx$/i,
   enforce: 'pre',
-  exclude: /node_modules/,
   dependency: { not: 'url' },
   resourceQuery: { not: /[?&]raw(?:&|=|$)/ },
   with: { type: { not: 'text' } },
   loader: 'solid-loader/refresh',
-}
+} as const;
 ```
 
 ## Server-side rendering
 
-If the client will hydrate server-rendered HTML, enable `hydratable` in both builds. Set `solid.generate` to match the output each build needs.
+Set `solid.generate` to `'ssr'` in the server build. If the client hydrates the server-rendered HTML, enable `solid.hydratable` in both builds and keep the default `'dom'` output on the client.
 
-| Build                        | Compiler options                        |
-| ---------------------------- | --------------------------------------- |
-| Server                       | `{ generate: 'ssr', hydratable: true }` |
-| Client hydrating server HTML | `{ generate: 'dom', hydratable: true }` |
+Add this rule to let the Solid runtime load hydration modules by URL.
 
-Add this rule so the Solid runtime can load hydration modules by URL.
-
-```js
-{
+```ts
+const runtimeRule = {
   descriptionData: { name: /^@solidjs\/web$/ },
   parser: { importDynamic: false },
-}
+};
 ```
 
 ## Options
 
-Pass options to the loader in the rule’s `use` array. This example selects the Babel backend.
-
-```ts
-const jsxRule = {
-  test: /\.[mc]?[jt]sx$/i,
-  use: [
-    { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
-    { loader: 'solid-loader', options: { compiler: 'babel' } },
-  ],
-};
-```
-
-For typed configurations, import `SolidLoaderOptions`, `SolidCompiler`, or `SolidPresetOptions` from `solid-loader`, and `SolidRefreshLoaderOptions` from `solid-loader/refresh`.
+To configure the loader, replace `'solid-loader'` in the `use` array with an object such as `{ loader: 'solid-loader', options: { compiler: 'babel' } }`. The examples below show what to put in `options`. In TypeScript, use `SolidLoaderOptions` from `solid-loader` for the main loader or `SolidRefreshLoaderOptions` from `solid-loader/refresh` for the pre-loader.
 
 ### compiler
 
-- **Type:** `'native' | 'babel'`
-- **Default:** `'native'`
+The loader uses Solid’s native compiler by default (`'native'`). Set `compiler` to `'babel'` to compile JSX with `@solidjs/babel-plugin`.
 
-Selects the Solid JSX compiler. The default uses `@solidjs/compiler`. Set this to `'babel'` to compile with `@solidjs/babel-plugin`.
+```ts
+const options = { compiler: 'babel' };
+```
 
 ### refresh
 
-- **Type:** `boolean`
-- **Default:** Enabled in development mode when HMR is active, the target supports the DOM, and `solid.generate` is not `'ssr'`.
+By default, Solid Refresh runs in development when HMR is enabled, the target supports the DOM, and the compiler is generating client output. Set `refresh` to `true` or `false` to override that behavior. For example, disable it on the main loader when using the [separate pre-loader](#using-a-separate-pre-loader).
 
-Runs Solid Refresh before JSX compilation with either compiler. Set `false` to disable the built-in transform or `true` to enable it explicitly. Files in `node_modules` skip the Refresh transform and still go through JSX compilation.
+```ts
+const options = { refresh: false };
+```
 
 ### solid
 
-- **Type:** `SolidPresetOptions`
+Pass options to the selected Solid compiler through `solid`. It generates DOM output by default and enables development transforms in Rspack’s development mode. For a server build that renders HTML for hydration, use the following settings.
 
-Passes options to the selected compiler. By default, Solid generates DOM output and enables development transforms when Rspack runs in development mode. Set `solid.dev` to override that behavior, or use `solid.generate` and `solid.hydratable` to configure [server-side rendering](#server-side-rendering).
+```ts
+const options = { solid: { generate: 'ssr', hydratable: true } };
+```
 
 ### decoratorVersion
 
-- **Type:** `'legacy' | '2022-03' | '2023-11'`
+The Babel backend parses standard decorators by default. Both `'2022-03'` and `'2023-11'` use that parser. Choose `'legacy'` if your code uses legacy decorator syntax.
 
-Controls how the Babel backend parses decorators. Set this to `'legacy'` if your source uses legacy decorator syntax. Both dated values select Babel’s standard decorators parser, which is also the default when you omit this option.
+```ts
+const options = { compiler: 'babel', decoratorVersion: 'legacy' };
+```
 
 ### scriptRegex
 
-- **Type:** `RegExp`
+By default, the loader processes every file matched by the Rspack rule. If the rule also handles plain TypeScript, use `scriptRegex` to compile only TSX files and pass the rest through to the next loader.
 
-Filters the files the loader compiles. For example, if a shared rule handles both `.ts` and `.tsx`, use `scriptRegex: /\.tsx$/i` to pass plain TypeScript through to the next loader. By default, the loader processes every file that matches the Rspack rule.
+```ts
+const options = { scriptRegex: /\.tsx$/i };
+```
 
 ### transformFilename
 
-- **Type:** `string`
-- **Default:** The resource path supplied by Rspack.
+The loader normally uses the resource path to match `scriptRegex` and choose a parser. Give an inline module a filename such as `'data-uri.jsx'` to parse it as JSX. Source maps still point to the original resource.
 
-Sets the filename used for the `scriptRegex` check and for choosing the JSX or TSX parser. For example, use `transformFilename: 'data-uri.jsx'` for a rule that handles inline JSX modules. Source maps still point to the original resource.
+```ts
+const options = { transformFilename: 'data-uri.jsx' };
+```
 
 ### granular
 
-- **Loader:** `solid-loader/refresh`
-- **Type:** `boolean`
-- **Default:** `true`
+The `solid-loader/refresh` pre-loader tracks changes per component by default so edits can preserve state in unaffected components. Set `granular` to `false` on the pre-loader to turn off this tracking while keeping HMR enabled.
 
-Adds per-component metadata so Solid Refresh can limit which components remount after an edit. Set `granular: false` on the refresh loader to disable that tracking while keeping HMR enabled.
+```ts
+const options = { granular: false };
+```
 
 ## License
 
