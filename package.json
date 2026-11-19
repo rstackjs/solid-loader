@@ -1,6 +1,6 @@
 {
   "name": "solid-loader",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Solid JSX and refresh loaders for Rspack",
   "repository": "https://github.com/rstackjs/solid-loader",
   "license": "MIT",
