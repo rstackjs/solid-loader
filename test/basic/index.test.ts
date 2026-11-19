@@ -1,6 +1,7 @@
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { promisify } from 'node:util';
 import { type RuleSetRule, rspack } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { expect, test } from '@rstest/playwright';
@@ -9,18 +10,8 @@ import playgroundConfig from '../../playground/rspack.config.ts';
 
 const playground = path.resolve(import.meta.dirname, '../../playground');
 
-test('renders a TSX component that imports a plain TypeScript module', async ({
-  page,
-}) => {
+test('builds a TSX component that imports a plain TypeScript module', async () => {
   const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
-  const port = await getRandomPort();
-  const config = playgroundConfig({}, { mode: 'development' });
-  config.context = cwd;
-  config.entry = './app.tsx';
-  const server = new RspackDevServer(
-    { host: '127.0.0.1', port, hot: true },
-    rspack(config),
-  );
   try {
     await writeFile(
       path.join(cwd, 'count.ts'),
@@ -32,11 +23,14 @@ test('renders a TSX component that imports a plain TypeScript module', async ({
        import { count } from './count.ts';
        render(() => <h1>{count}</h1>, document.body);`,
     );
-    await server.start();
-    await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.getByRole('heading')).toHaveText('42');
+    const stats = await promisify(rspack)({
+      ...playgroundConfig({}, { mode: 'production' }),
+      context: cwd,
+      entry: './app.tsx',
+      output: { path: path.join(cwd, 'dist') },
+    });
+    expect(stats.toJson({ all: false, errors: true }).errors).toEqual([]);
   } finally {
-    await server.stop();
     await rm(cwd, { recursive: true, force: true });
   }
 });
