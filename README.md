@@ -40,7 +40,12 @@ export default defineConfig({
       {
         test: /\.[mc]?[jt]sx$/i,
         use: [
-          { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
+          {
+            loader: 'builtin:swc-loader',
+            options: {
+              detectSyntax: 'auto',
+            },
+          },
           'solid-loader',
         ],
       },
@@ -80,7 +85,9 @@ export default {
       {
         test: /\.jsx$/i,
         loader: 'solid-loader',
-        options: { compiler: 'babel' },
+        options: {
+          compiler: 'babel',
+        },
       },
     ],
   },
@@ -98,7 +105,9 @@ export default {
       {
         test: /\.jsx$/i,
         loader: 'solid-loader',
-        options: { refresh: false },
+        options: {
+          refresh: false,
+        },
       },
     ],
   },
@@ -117,11 +126,20 @@ export default {
       {
         test: /\.jsx$/i,
         loader: 'solid-loader',
-        options: { solid: { generate: 'ssr', hydratable: true } },
+        options: {
+          solid: {
+            generate: 'ssr',
+            hydratable: true,
+          },
+        },
       },
       {
-        descriptionData: { name: /^@solidjs\/web$/ },
-        parser: { importDynamic: false },
+        descriptionData: {
+          name: /^@solidjs\/web$/,
+        },
+        parser: {
+          importDynamic: false,
+        },
       },
     ],
   },
@@ -143,14 +161,22 @@ export default {
             loader: 'builtin:swc-loader',
             options: {
               jsc: {
-                parser: { syntax: 'ecmascript', decorators: true },
-                transform: { legacyDecorator: true },
+                parser: {
+                  syntax: 'ecmascript',
+                  decorators: true,
+                },
+                transform: {
+                  legacyDecorator: true,
+                },
               },
             },
           },
           {
             loader: 'solid-loader',
-            options: { compiler: 'babel', decoratorVersion: 'legacy' },
+            options: {
+              compiler: 'babel',
+              decoratorVersion: 'legacy',
+            },
           },
         ],
       },
@@ -170,8 +196,18 @@ export default {
       {
         test: /\.tsx?$/i,
         use: [
-          { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
-          { loader: 'solid-loader', options: { scriptRegex: /\.tsx$/i } },
+          {
+            loader: 'builtin:swc-loader',
+            options: {
+              detectSyntax: 'auto',
+            },
+          },
+          {
+            loader: 'solid-loader',
+            options: {
+              scriptRegex: /\.tsx$/i,
+            },
+          },
         ],
       },
     ],
@@ -191,7 +227,9 @@ export default {
         scheme: 'data',
         mimetype: 'text/javascript',
         loader: 'solid-loader',
-        options: { transformFilename: 'data-uri.jsx' },
+        options: {
+          transformFilename: 'data-uri.jsx',
+        },
       },
     ],
   },
@@ -210,12 +248,16 @@ export default {
         test: /\.jsx$/i,
         enforce: 'pre',
         loader: 'solid-loader/refresh',
-        options: { granular: false },
+        options: {
+          granular: false,
+        },
       },
       {
         test: /\.jsx$/i,
         loader: 'solid-loader',
-        options: { refresh: false },
+        options: {
+          refresh: false,
+        },
       },
     ],
   },
