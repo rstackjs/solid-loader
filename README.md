@@ -57,42 +57,34 @@ Solid Refresh runs automatically during browser development when hot module repl
 
 ### Using a separate pre-loader
 
-If a Babel transform needs to run between Solid Refresh and JSX compilation, set `refresh: false` on the main loader and add this rule to your browser development config. Rspack will run it before the other loaders.
-
-```ts
-const refreshRule = {
-  test: /\.[mc]?[jt]sx$/i,
-  enforce: 'pre',
-  dependency: { not: 'url' },
-  resourceQuery: { not: /[?&]raw(?:&|=|$)/ },
-  with: { type: { not: 'text' } },
-  loader: 'solid-loader/refresh',
-} as const;
-```
+If a Babel transform needs to run between Solid Refresh and JSX compilation, set `refresh: false` on the main loader and register `solid-loader/refresh` with `enforce: 'pre'` in your browser development config. See the [pre-loader example](#granular).
 
 ## Server-side rendering
 
 Set `solid.generate` to `'ssr'` in the server build. If the client hydrates the server-rendered HTML, enable `solid.hydratable` in both builds and keep the default `'dom'` output on the client.
 
-Add this rule to let the Solid runtime load hydration modules by URL.
-
-```ts
-const runtimeRule = {
-  descriptionData: { name: /^@solidjs\/web$/ },
-  parser: { importDynamic: false },
-};
-```
+The [server configuration](#solid) also lets the Solid runtime load hydration modules by URL.
 
 ## Options
 
-To configure the loader, replace `'solid-loader'` in the `use` array with an object such as `{ loader: 'solid-loader', options: { compiler: 'babel' } }`. The examples below show what to put in `options`. In TypeScript, use `SolidLoaderOptions` from `solid-loader` for the main loader or `SolidRefreshLoaderOptions` from `solid-loader/refresh` for the pre-loader.
+Set loader options in `module.rules` in your `rspack.config.ts`. The main loader exports the `SolidLoaderOptions` type, and `solid-loader/refresh` exports `SolidRefreshLoaderOptions`.
 
 ### compiler
 
 The loader uses Solid’s native compiler by default (`'native'`). Set `compiler` to `'babel'` to compile JSX with `@solidjs/babel-plugin`.
 
 ```ts
-const options = { compiler: 'babel' };
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.jsx$/i,
+        loader: 'solid-loader',
+        options: { compiler: 'babel' },
+      },
+    ],
+  },
+};
 ```
 
 ### refresh
@@ -100,7 +92,17 @@ const options = { compiler: 'babel' };
 By default, Solid Refresh runs in development when HMR is enabled, the target supports the DOM, and the compiler is generating client output. Set `refresh` to `true` or `false` to override that behavior. For example, disable it on the main loader when using the [separate pre-loader](#using-a-separate-pre-loader).
 
 ```ts
-const options = { refresh: false };
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.jsx$/i,
+        loader: 'solid-loader',
+        options: { refresh: false },
+      },
+    ],
+  },
+};
 ```
 
 ### solid
@@ -108,7 +110,22 @@ const options = { refresh: false };
 Pass options to the selected Solid compiler through `solid`. It generates DOM output by default and enables development transforms in Rspack’s development mode. For a server build that renders HTML for hydration, use the following settings.
 
 ```ts
-const options = { solid: { generate: 'ssr', hydratable: true } };
+export default {
+  target: 'node',
+  module: {
+    rules: [
+      {
+        test: /\.jsx$/i,
+        loader: 'solid-loader',
+        options: { solid: { generate: 'ssr', hydratable: true } },
+      },
+      {
+        descriptionData: { name: /^@solidjs\/web$/ },
+        parser: { importDynamic: false },
+      },
+    ],
+  },
+};
 ```
 
 ### decoratorVersion
@@ -116,7 +133,30 @@ const options = { solid: { generate: 'ssr', hydratable: true } };
 The Babel backend parses standard decorators by default. Both `'2022-03'` and `'2023-11'` use that parser. Choose `'legacy'` if your code uses legacy decorator syntax.
 
 ```ts
-const options = { compiler: 'babel', decoratorVersion: 'legacy' };
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.jsx$/i,
+        use: [
+          {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'ecmascript', decorators: true },
+                transform: { legacyDecorator: true },
+              },
+            },
+          },
+          {
+            loader: 'solid-loader',
+            options: { compiler: 'babel', decoratorVersion: 'legacy' },
+          },
+        ],
+      },
+    ],
+  },
+};
 ```
 
 ### scriptRegex
@@ -124,7 +164,19 @@ const options = { compiler: 'babel', decoratorVersion: 'legacy' };
 By default, the loader processes every file matched by the Rspack rule. If the rule also handles plain TypeScript, use `scriptRegex` to compile only TSX files and pass the rest through to the next loader.
 
 ```ts
-const options = { scriptRegex: /\.tsx$/i };
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/i,
+        use: [
+          { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
+          { loader: 'solid-loader', options: { scriptRegex: /\.tsx$/i } },
+        ],
+      },
+    ],
+  },
+};
 ```
 
 ### transformFilename
@@ -132,7 +184,18 @@ const options = { scriptRegex: /\.tsx$/i };
 The loader normally uses the resource path to match `scriptRegex` and choose a parser. Give an inline module a filename such as `'data-uri.jsx'` to parse it as JSX. Source maps still point to the original resource.
 
 ```ts
-const options = { transformFilename: 'data-uri.jsx' };
+export default {
+  module: {
+    rules: [
+      {
+        scheme: 'data',
+        mimetype: 'text/javascript',
+        loader: 'solid-loader',
+        options: { transformFilename: 'data-uri.jsx' },
+      },
+    ],
+  },
+};
 ```
 
 ### granular
@@ -140,7 +203,23 @@ const options = { transformFilename: 'data-uri.jsx' };
 The `solid-loader/refresh` pre-loader tracks changes per component by default so edits can preserve state in unaffected components. Set `granular` to `false` on the pre-loader to turn off this tracking while keeping HMR enabled.
 
 ```ts
-const options = { granular: false };
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.jsx$/i,
+        enforce: 'pre',
+        loader: 'solid-loader/refresh',
+        options: { granular: false },
+      },
+      {
+        test: /\.jsx$/i,
+        loader: 'solid-loader',
+        options: { refresh: false },
+      },
+    ],
+  },
+};
 ```
 
 ## License
