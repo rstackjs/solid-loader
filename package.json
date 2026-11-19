@@ -32,8 +32,8 @@
   "dependencies": {
     "@babel/core": "^7.29.13",
     "@jridgewell/remapping": "^2.3.5",
-    "@solidjs/babel-plugin": "2.0.0",
-    "@solidjs/compiler": "2.0.0"
+    "@solidjs/babel-plugin": "^2.0.0",
+    "@solidjs/compiler": "^2.0.0"
   },
   "devDependencies": {
     "@rspack/core": "catalog:",
