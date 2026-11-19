@@ -1,6 +1,7 @@
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { promisify } from 'node:util';
 import { type RuleSetRule, rspack } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { expect, test } from '@rstest/playwright';
@@ -8,6 +9,31 @@ import { getRandomPort } from '@rstackjs/test-utils';
 import playgroundConfig from '../../playground/rspack.config.ts';
 
 const playground = path.resolve(import.meta.dirname, '../../playground');
+
+test('builds a TSX component that imports a plain TypeScript module', async () => {
+  const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
+  try {
+    await writeFile(
+      path.join(cwd, 'count.ts'),
+      'export const count: number = 42;',
+    );
+    await writeFile(
+      path.join(cwd, 'app.tsx'),
+      `import { render } from '@solidjs/web';
+       import { count } from './count.ts';
+       render(() => <h1>{count}</h1>, document.body);`,
+    );
+    const stats = await promisify(rspack)({
+      ...playgroundConfig({}, { mode: 'production' }),
+      context: cwd,
+      entry: './app.tsx',
+      output: { path: path.join(cwd, 'dist') },
+    });
+    expect(stats.toJson({ all: false, errors: true }).errors).toEqual([]);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
 
 for (const compiler of ['native', 'babel']) {
   test(`renders typed SSR output with ${compiler}`, async () => {
@@ -102,7 +128,7 @@ for (const mode of [
         ];
         if (standalone) {
           rules.unshift({
-            test: jsxRule.test,
+            test: /\.[mc]?[jt]sx$/i,
             enforce: 'pre',
             loader: 'solid-loader/refresh',
           });
