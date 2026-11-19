@@ -33,7 +33,10 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
   const sourceFilename = this.resourcePath;
   const resourceFilename = options.transformFilename ?? sourceFilename;
 
-  if (options.scriptRegex && !options.scriptRegex.test(resourceFilename)) {
+  if (
+    options.scriptRegex &&
+    resourceFilename.search(options.scriptRegex) === -1
+  ) {
     callback(null, source, sourceMap);
     return;
   }
