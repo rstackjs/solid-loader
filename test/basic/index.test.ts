@@ -1,7 +1,7 @@
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { rspack } from '@rspack/core';
+import { type RuleSetRule, rspack } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { expect, test } from '@rstest/playwright';
 import { getRandomPort } from '@rstackjs/test-utils';
@@ -75,35 +75,59 @@ for (const compiler of ['native', 'babel']) {
   });
 }
 
-test('updates a component and preserves its parent state', async ({ page }) => {
-  const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
-  try {
-    await cp(path.join(playground, 'src'), path.join(cwd, 'src'), {
-      recursive: true,
-    });
-    const port = await getRandomPort();
-    const compiler = rspack({
-      ...playgroundConfig({}, { mode: 'development' }),
-      context: cwd,
-    });
-    const server = new RspackDevServer(
-      { host: '127.0.0.1', port, hot: true },
-      compiler,
-    );
-    await server.start();
+for (const mode of [
+  'automatic refresh',
+  'explicit Babel refresh',
+  'pre-loader',
+]) {
+  test(`preserves parent state during HMR with ${mode}`, async ({ page }) => {
+    const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
     try {
-      await page.goto(`http://127.0.0.1:${port}`);
-      const button = page.getByRole('button');
-      await button.click();
-      await expect(button).toHaveText('Count: 1');
-      const file = path.join(cwd, 'src/Counter.tsx');
-      const source = await readFile(file, 'utf8');
-      await writeFile(file, source.replace('Count:', 'Updated:'));
-      await expect(button).toHaveText('Updated: 1');
+      await cp(path.join(playground, 'src'), path.join(cwd, 'src'), {
+        recursive: true,
+      });
+      const port = await getRandomPort();
+      const config = playgroundConfig({}, { mode: 'development' });
+      config.context = cwd;
+      if (mode !== 'automatic refresh') {
+        const rules = config.module!.rules!;
+        const jsxRule = rules[0] as RuleSetRule;
+        const standalone = mode === 'pre-loader';
+        jsxRule.use = [
+          { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
+          {
+            loader: 'solid-loader',
+            options: { compiler: 'babel', refresh: !standalone },
+          },
+        ];
+        if (standalone) {
+          rules.unshift({
+            test: jsxRule.test,
+            enforce: 'pre',
+            loader: 'solid-loader/refresh',
+          });
+        }
+      }
+      const compiler = rspack(config);
+      const server = new RspackDevServer(
+        { host: '127.0.0.1', port, hot: true },
+        compiler,
+      );
+      await server.start();
+      try {
+        await page.goto(`http://127.0.0.1:${port}`);
+        const button = page.getByRole('button');
+        await button.click();
+        await expect(button).toHaveText('Count: 1');
+        const file = path.join(cwd, 'src/Counter.tsx');
+        const source = await readFile(file, 'utf8');
+        await writeFile(file, source.replace('Count:', 'Updated:'));
+        await expect(button).toHaveText('Updated: 1');
+      } finally {
+        await server.stop();
+      }
     } finally {
-      await server.stop();
+      await rm(cwd, { recursive: true, force: true });
     }
-  } finally {
-    await rm(cwd, { recursive: true, force: true });
-  }
-});
+  });
+}

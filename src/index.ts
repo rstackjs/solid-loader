@@ -3,6 +3,7 @@ import type { TransformOptions } from '@babel/core';
 import type { LoaderDefinition } from '@rspack/core';
 import type { TransformOptions as NativeTransformOptions } from '@solidjs/compiler';
 import {
+  applyRefresh,
   getTransformFilename,
   mergeSourceMaps,
   normalizeSourceMap,
@@ -16,6 +17,7 @@ const TSX_REGEX = /\.tsx$/i;
 
 export type SolidLoaderOptions = {
   compiler?: SolidCompiler;
+  refresh?: boolean;
   solid?: SolidPresetOptions;
   scriptRegex?: RegExp;
   decoratorVersion?: 'legacy' | '2022-03' | '2023-11';
@@ -39,9 +41,23 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
   const filename = getTransformFilename(resourceFilename);
   const { compiler = 'native', decoratorVersion } = options;
   const solid = { dev: this.mode === 'development', ...options.solid };
-  const inputSourceMap = normalizeSourceMap(sourceMap);
+  const refresh =
+    options.refresh ??
+    (this.mode === 'development' &&
+      this.hot &&
+      this.environment.document &&
+      solid.generate !== 'ssr');
 
   try {
+    if (refresh) {
+      const result = await applyRefresh(source, sourceMap, this, {
+        filename: resourceFilename,
+      });
+      source = result.code;
+      sourceMap = result.map;
+    }
+    const inputSourceMap = normalizeSourceMap(sourceMap);
+
     if (compiler === 'babel') {
       const { transformAsync } = await import('@babel/core');
       const parserPlugins: NonNullable<

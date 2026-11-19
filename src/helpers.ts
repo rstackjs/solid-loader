@@ -1,4 +1,4 @@
-import type { RawSourceMap } from '@rspack/core';
+import type { LoaderContext, RawSourceMap } from '@rspack/core';
 import remapping from '@jridgewell/remapping';
 
 const DEFAULT_SOLID_SCRIPT_REGEX = /\.(?:jsx|tsx)$/i;
@@ -36,3 +36,39 @@ export const mergeSourceMaps = (
     () => null,
   ) as RawSourceMap;
 };
+
+const NODE_MODULES_REGEX = /[\\/]node_modules[\\/]/;
+
+export async function applyRefresh(
+  source: string,
+  sourceMap: RawSourceMap | string | undefined,
+  context: Pick<LoaderContext, 'resourcePath' | 'sourceMap'>,
+  {
+    filename = context.resourcePath,
+    granular,
+  }: { filename?: string; granular?: boolean } = {},
+) {
+  if (NODE_MODULES_REGEX.test(context.resourcePath)) {
+    return { code: source, map: sourceMap };
+  }
+
+  const { transformRefreshAsync } = await import('@solidjs/compiler');
+  const result = await transformRefreshAsync(source, {
+    filename: getTransformFilename(filename),
+    bundler: 'standard',
+    fixRender: true,
+    ...(typeof granular === 'boolean' ? { granular } : {}),
+    jsx: false,
+    importSource: 'solid-js/refresh',
+    sourceMap: context.sourceMap || Boolean(sourceMap),
+  });
+
+  return {
+    code: result.code,
+    map: mergeSourceMaps(
+      normalizeSourceMap(sourceMap),
+      result.map,
+      context.resourcePath,
+    ),
+  };
+}

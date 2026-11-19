@@ -1,6 +1,6 @@
 # solid-loader
 
-A Rspack 2 loader for Solid 2 JSX and TSX. It uses Solid’s native compiler by default and includes a separate loader for hot module replacement (HMR) with Solid Refresh.
+A Rspack 2 loader for Solid 2 JSX and TSX. It uses Solid’s native compiler by default and supports hot module replacement (HMR) with Solid Refresh.
 
 <p>
   <a href="https://www.npmjs.com/package/solid-loader"><img src="https://img.shields.io/npm/v/solid-loader?style=flat-square&colorA=564341&colorB=EDED91" alt="npm version" /></a>
@@ -48,7 +48,11 @@ For TypeScript projects, set `jsx` to `"preserve"` and `jsxImportSource` to `"@s
 
 ## Solid Refresh
 
-To enable Solid Refresh during browser development, turn on HMR, add `'development'` to `resolve.conditionNames` alongside `'solid'`, and include the following rule. Setting `enforce: 'pre'` lets the refresh loader register components before Solid compiles the JSX.
+Solid Refresh runs automatically for browser development builds when Rspack enables HMR. Keep `'solid'` and `'development'` in your development resolve conditions so Solid uses its development runtime. See the [playground configuration](./playground/rspack.config.ts) for a complete example.
+
+### Using a separate pre-loader
+
+If another loader needs to run between Solid Refresh and JSX compilation, use `solid-loader/refresh` as a pre-loader and set `refresh: false` on the main loader. Integrations such as Rsbuild can then register components before a custom Babel transform runs.
 
 ```js
 {
@@ -61,8 +65,6 @@ To enable Solid Refresh during browser development, turn on HMR, add `'developme
   loader: 'solid-loader/refresh',
 }
 ```
-
-See the [playground configuration](./playground/rspack.config.ts) for an example that enables Solid Refresh only in development.
 
 ## Server-side rendering
 
@@ -104,6 +106,13 @@ For typed configurations, import `SolidLoaderOptions`, `SolidCompiler`, or `Soli
 - **Default:** `'native'`
 
 Selects the Solid JSX compiler. The default uses `@solidjs/compiler`. Set this to `'babel'` to compile with `@solidjs/babel-plugin`.
+
+### refresh
+
+- **Type:** `boolean`
+- **Default:** Enabled in development mode when HMR is active, the target supports the DOM, and `solid.generate` is not `'ssr'`.
+
+Runs Solid Refresh before JSX compilation with either compiler. Set `false` to disable the built-in transform or `true` to enable it explicitly. Files in `node_modules` skip the Refresh transform and still go through JSX compilation.
 
 ### solid
 
