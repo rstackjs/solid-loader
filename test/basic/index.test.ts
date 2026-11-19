@@ -14,11 +14,15 @@ for (const compiler of ['native', 'babel']) {
     const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
     try {
       await writeFile(
+        path.join(cwd, 'Title.tsx'),
+        'export const Title = () => <h1>Hello</h1>;',
+      );
+      await writeFile(
         path.join(cwd, 'app.tsx'),
         `
         import { renderToString } from '@solidjs/web';
-        const title: string = 'Hello';
-        export const html = renderToString(() => <h1>{title}</h1>);
+        import { Title } from './Title.tsx';
+        export const html: string = renderToString(() => <Title />);
       `,
       );
       await new Promise<void>((resolve, reject) => {
@@ -46,7 +50,11 @@ for (const compiler of ['native', 'babel']) {
                     },
                     {
                       loader: 'solid-loader',
-                      options: { compiler, solid: { generate: 'ssr' } },
+                      options: {
+                        compiler,
+                        scriptRegex: /\.tsx$/g,
+                        solid: { generate: 'ssr' },
+                      },
                     },
                   ],
                 },
