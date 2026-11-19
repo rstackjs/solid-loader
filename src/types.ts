@@ -44,6 +44,11 @@ export type SolidPresetOptions = {
    */
   hydratable?: boolean;
   /**
+   * Whether to share component prop getters across instances in SSR output.
+   * @default true
+   */
+  hoistProps?: TransformOptions['hoistProps'];
+  /**
    * Whether to automatically delegate supported events.
    * @default true
    */
