@@ -9,6 +9,38 @@ import playgroundConfig from '../../playground/rspack.config.ts';
 
 const playground = path.resolve(import.meta.dirname, '../../playground');
 
+test('renders a TSX component that imports a plain TypeScript module', async ({
+  page,
+}) => {
+  const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
+  const port = await getRandomPort();
+  const config = playgroundConfig({}, { mode: 'development' });
+  config.context = cwd;
+  config.entry = './app.tsx';
+  const server = new RspackDevServer(
+    { host: '127.0.0.1', port, hot: true },
+    rspack(config),
+  );
+  try {
+    await writeFile(
+      path.join(cwd, 'count.ts'),
+      'export const count: number = 42;',
+    );
+    await writeFile(
+      path.join(cwd, 'app.tsx'),
+      `import { render } from '@solidjs/web';
+       import { count } from './count.ts';
+       render(() => <h1>{count}</h1>, document.body);`,
+    );
+    await server.start();
+    await page.goto(`http://127.0.0.1:${port}`);
+    await expect(page.getByRole('heading')).toHaveText('42');
+  } finally {
+    await server.stop();
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 for (const compiler of ['native', 'babel']) {
   test(`renders typed SSR output with ${compiler}`, async () => {
     const cwd = await mkdtemp(path.join(playground, 'test-temp-'));
@@ -102,7 +134,7 @@ for (const mode of [
         ];
         if (standalone) {
           rules.unshift({
-            test: jsxRule.test,
+            test: /\.[mc]?[jt]sx$/i,
             enforce: 'pre',
             loader: 'solid-loader/refresh',
           });

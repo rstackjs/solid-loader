@@ -17,7 +17,8 @@ export default (
     module: {
       rules: [
         {
-          test: /\.[mc]?[jt]sx$/i,
+          test: /\.[mc]?[jt]sx?$/i,
+          exclude: /node_modules/,
           use: [
             { loader: 'builtin:swc-loader', options: { detectSyntax: 'auto' } },
             'solid-loader',

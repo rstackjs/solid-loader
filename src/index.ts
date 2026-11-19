@@ -14,6 +14,7 @@ export type { SolidCompiler, SolidPresetOptions } from './types.js';
 
 const require = createRequire(import.meta.url);
 const TSX_REGEX = /\.tsx$/i;
+const PLAIN_TS_REGEX = /\.[mc]?ts$/i;
 
 export type SolidLoaderOptions = {
   compiler?: SolidCompiler;
@@ -34,10 +35,10 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
   const sourceFilename = this.resourcePath;
   const resourceFilename = options.transformFilename ?? sourceFilename;
 
-  if (
-    options.scriptRegex &&
-    resourceFilename.search(options.scriptRegex) === -1
-  ) {
+  const skip = options.scriptRegex
+    ? resourceFilename.search(options.scriptRegex) === -1
+    : PLAIN_TS_REGEX.test(resourceFilename);
+  if (skip) {
     callback(null, source, sourceMap, additionalData);
     return;
   }
