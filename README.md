@@ -116,7 +116,9 @@ export default {
 
 ### solid
 
-Pass options to the selected Solid compiler through `solid`. It generates DOM output by default and enables development transforms in Rspack’s development mode. For a server build that renders HTML for hydration, use the following settings.
+Pass options to the selected Solid compiler through `solid`. It generates DOM output by default and enables development transforms in Rspack’s development mode. Source locations are relative to Rspack’s `context` by default. Set `solid.root` to use a different base directory.
+
+For a server build that renders HTML for hydration, use the following settings.
 
 ```ts
 export default {

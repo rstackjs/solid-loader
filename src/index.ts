@@ -42,7 +42,11 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
 
   const filename = getTransformFilename(resourceFilename);
   const { compiler = 'native', decoratorVersion } = options;
-  const solid = { dev: this.mode === 'development', ...options.solid };
+  const solid = {
+    dev: this.mode === 'development',
+    ...options.solid,
+    root: options.solid?.root ?? this.rootContext,
+  };
   const refresh =
     options.refresh ??
     (this.mode === 'development' &&
