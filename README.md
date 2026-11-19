@@ -24,7 +24,7 @@ yarn add -D solid-loader
 bun add --dev solid-loader
 ```
 
-Add `solid-loader` after `builtin:swc-loader` in the `use` array. Rspack runs loaders from right to left, so Solid compiles JSX first and SWC then strips TypeScript types. Plain TypeScript files pass directly to SWC.
+Add `solid-loader` after `builtin:swc-loader` in the `use` array. Rspack runs loaders from right to left, so Solid compiles JSX first and SWC then strips TypeScript types. Plain JavaScript and TypeScript files pass directly to SWC.
 
 ```ts
 // rspack.config.ts
@@ -201,8 +201,9 @@ export default {
 ### scriptRegex
 
 - **Type:** `RegExp`
+- **Default:** `/\.[cm]?[jt]sx$/i`
 
-By default, the loader skips `.ts`, `.mts`, and `.cts` files. Set `scriptRegex` to override this default and compile only filenames that match your pattern. For example, a shared script rule can restrict Solid compilation to JSX and TSX files.
+The main loader compiles files whose names match this pattern. By default it matches JSX and TSX files, including their ESM and CommonJS variants. The following example also enables JSX in JavaScript files.
 
 ```ts
 export default {
@@ -221,7 +222,7 @@ export default {
           {
             loader: 'solid-loader',
             options: {
-              scriptRegex: /\.[mc]?[jt]sx$/i,
+              scriptRegex: /\.[cm]?(?:jsx?|tsx)$/i,
             },
           },
         ],

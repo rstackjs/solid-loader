@@ -1,11 +1,11 @@
 import type { LoaderContext, RawSourceMap } from '@rspack/core';
 import remapping from '@jridgewell/remapping';
 
-const DEFAULT_SOLID_SCRIPT_REGEX = /\.(?:jsx|tsx)$/i;
+const NATIVE_JSX_EXTENSION = /\.[jt]sx$/;
 
-// Native transforms infer the parser from a standard JSX/TSX extension.
+// Native transforms infer the parser from a lowercase .jsx or .tsx extension.
 export const getTransformFilename = (filename: string): string =>
-  DEFAULT_SOLID_SCRIPT_REGEX.test(filename)
+  NATIVE_JSX_EXTENSION.test(filename)
     ? filename
     : `${filename}${/\.[mc]?tsx$/i.test(filename) ? '.tsx' : '.jsx'}`;
 
