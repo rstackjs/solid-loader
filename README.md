@@ -39,7 +39,6 @@ export default defineConfig({
     rules: [
       {
         test: /\.[mc]?[jt]sx?$/i,
-        exclude: /node_modules/,
         use: [
           {
             loader: 'builtin:swc-loader',
@@ -211,7 +210,6 @@ export default {
     rules: [
       {
         test: /\.[mc]?[jt]sx?$/i,
-        exclude: /node_modules/,
         use: [
           {
             loader: 'builtin:swc-loader',
