@@ -37,7 +37,7 @@ export const mergeSourceMaps = (
   ) as RawSourceMap;
 };
 
-const NODE_MODULES_REGEX = /[\\/]node_modules[\\/]/;
+export const NODE_MODULES_REGEX = /[\\/]node_modules[\\/]/;
 
 export async function applyRefresh(
   source: string,
@@ -48,10 +48,6 @@ export async function applyRefresh(
     granular,
   }: { filename?: string; granular?: boolean } = {},
 ) {
-  if (NODE_MODULES_REGEX.test(context.resourcePath)) {
-    return { code: source, map: sourceMap };
-  }
-
   const { transformRefreshAsync } = await import('@solidjs/compiler');
   const result = await transformRefreshAsync(source, {
     filename: getTransformFilename(filename),

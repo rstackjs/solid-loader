@@ -6,6 +6,7 @@ import {
   applyRefresh,
   getTransformFilename,
   mergeSourceMaps,
+  NODE_MODULES_REGEX,
   normalizeSourceMap,
 } from './helpers.js';
 import type { SolidCompiler, SolidPresetOptions } from './types.js';
@@ -27,6 +28,7 @@ export type SolidLoaderOptions = {
 const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
   source,
   sourceMap,
+  additionalData,
 ): Promise<void> {
   const callback = this.async();
   const options = this.getOptions();
@@ -37,7 +39,7 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
     options.scriptRegex &&
     resourceFilename.search(options.scriptRegex) === -1
   ) {
-    callback(null, source, sourceMap);
+    callback(null, source, sourceMap, additionalData);
     return;
   }
 
@@ -52,7 +54,7 @@ const solidLoader: LoaderDefinition<SolidLoaderOptions> = async function (
       solid.generate !== 'ssr');
 
   try {
-    if (refresh) {
+    if (refresh && !NODE_MODULES_REGEX.test(sourceFilename)) {
       const result = await applyRefresh(source, sourceMap, this, {
         filename: resourceFilename,
       });
