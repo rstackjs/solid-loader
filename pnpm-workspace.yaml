@@ -23,3 +23,8 @@ catalog:
   '@rspack/dev-server': '^2.2.2'
   '@solidjs/web': '^2.0.0'
   solid-js: '^2.0.0'
+
+permissions:
+  rstack:
+    skills:
+      - rstack-cli-docs
